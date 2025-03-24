@@ -1,13 +1,13 @@
-package org.example.fileservice.fileservicebackend;
+package org.example.fileservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class FileServiceBackEndApplication {
+public class Application {
 
     public static void main(String[] args) {
-        SpringApplication.run(FileServiceBackEndApplication.class, args);
+        SpringApplication.run(Application.class, args);
     }
 
 }

@@ -1,0 +1,6 @@
+server:
+  port: ${APP_PORT:8080}
+
+spring:
+  profiles:
+    include: db, auth, files

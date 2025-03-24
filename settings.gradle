@@ -1,1 +1,6 @@
 rootProject.name = 'FileServiceBack-End'
+include 'application'
+include 'auth'
+include 'db'
+include 'files'
+
