@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: Halaiko Vitalii
+      changes:
+        - addColumn:
+            tableName: files
+            columns:
+              - column:
+                  name: file_type
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_in_trash
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+              - column:
+                  name: is_starred
+                  type: BOOLEAN
+                  defaultValueBoolean: false

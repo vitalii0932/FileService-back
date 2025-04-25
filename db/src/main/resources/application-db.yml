@@ -11,6 +11,12 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+    show-sql: true
 
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml

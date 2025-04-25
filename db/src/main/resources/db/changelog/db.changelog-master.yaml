@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/changeset/create-table-users.yaml
   - include:
       file: db/changelog/changeset/create-table-files.yaml
+  - include:
+      file: db/changelog/changeset/add-columns-to-files.yaml
