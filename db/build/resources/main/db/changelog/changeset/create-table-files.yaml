@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 2
+      id: 1
       author: Halaiko Vitalii
       changes:
         - createTable:
@@ -45,8 +45,8 @@ databaseChangeLog:
                       nullable: false
               - column:
                   name: user_id
-                  type: BIGINT
+                  type: varchar(255)
                   constraints:
                     nullable: false
-                    references: users(id)
+                    references: users(sub)
                     foreignKeyName: fk_files_users

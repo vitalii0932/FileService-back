@@ -16,7 +16,10 @@ spring:
           descriptor:
             sql:
               BasicBinder: TRACE
-    show-sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
 
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml

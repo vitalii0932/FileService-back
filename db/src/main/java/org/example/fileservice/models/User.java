@@ -14,13 +14,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(name = "username", nullable = false)
-    private String userName;
+    private String sub;
+    @Column(unique = true, nullable = false)
     private String email;
-    private String password;
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private UserRoles role;
+    @Column(nullable = false)
+    private String name;
+    private String picture;
 }

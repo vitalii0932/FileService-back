@@ -10,6 +10,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,43 +22,25 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/files")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", allowCredentials = "true",
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 @RequiredArgsConstructor
 public class FilesController {
 
     private final FileService fileService;
 
     @GetMapping("/all")
-    public List<Map<String, String>> allFiles() {
-        return fileService.getAllFiles();
+    public List<Map<String, String>> allFiles(@AuthenticationPrincipal Jwt jwt) {
+        String sub = jwt.getSubject();
+        return fileService.getAllFiles(sub);
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Map<String, String>> uploadFile(@AuthenticationPrincipal Jwt jwt,
+                                                          @RequestParam("file") MultipartFile file) {
         try {
-            return ResponseEntity.ok(fileService.uploadFile(file));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(null);
-        }
-    }
-
-    @PostMapping("/download")
-    public ResponseEntity<byte[]> downloadFile(@RequestParam("id") Long id) {
-        try {
-            File file = fileService.loadFile(id);
-
-            if (file == null || file.getFileData() == null) {
-                return ResponseEntity.notFound().build();
-            }
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.parseMediaType(file.getContentType()));
-            headers.setContentLength(file.getFileSize());
-            headers.setContentDispositionFormData("attachment", file.getFileName());
-
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(file.getFileData());
+            String sub = jwt.getSubject();
+            return ResponseEntity.ok(fileService.uploadFile(sub, file));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(null);
         }
@@ -64,6 +48,7 @@ public class FilesController {
 
     @GetMapping("/star_file/{id}")
     public ResponseEntity<?> starFile(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable("id") @NotNull Long id
     ) {
         try {
@@ -72,7 +57,9 @@ public class FilesController {
                         .body("Invalid file id");
             }
 
-            boolean moved = fileService.starFile(id);
+            String sub = jwt.getSubject();
+
+            boolean moved = fileService.starFile(sub, id);
             if (moved) {
                 return ResponseEntity.noContent().build(); // 204 No Content
             } else {
@@ -89,6 +76,7 @@ public class FilesController {
 
     @GetMapping("/move_to_trash/{id}")
     public ResponseEntity<?> moveToTrash(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable("id") @NotNull Long id
     ) {
         try {
@@ -97,7 +85,9 @@ public class FilesController {
                         .body("Invalid file id");
             }
 
-            boolean moved = fileService.moveToTrash(id);
+            String sub = jwt.getSubject();
+
+            boolean moved = fileService.moveToTrash(sub, id);
             if (moved) {
                 return ResponseEntity.noContent().build(); // 204 No Content
             } else {
@@ -114,6 +104,7 @@ public class FilesController {
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteFile(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable("id") @NotNull Long id
     ) {
         try {
@@ -122,7 +113,9 @@ public class FilesController {
                         .body("Invalid file id");
             }
 
-            boolean deleted = fileService.deleteFile(id);
+            String sub = jwt.getSubject();
+
+            boolean deleted = fileService.deleteFile(sub, id);
             if (deleted) {
                 return ResponseEntity.noContent().build(); // 204 No Content
             } else {
@@ -139,6 +132,7 @@ public class FilesController {
 
     @PatchMapping("/rename/{id}")
     public ResponseEntity<?> renameFile(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable("id") @NotNull Long id,
             @RequestBody RenameRequest request
     ) {
@@ -148,7 +142,9 @@ public class FilesController {
                         .body("Invalid file id");
             }
 
-            boolean renamed = fileService.renameFile(id, request.getNewName());
+            String sub = jwt.getSubject();
+
+            boolean renamed = fileService.renameFile(sub, id, request.getNewName());
             if (renamed) {
                 return ResponseEntity.noContent().build(); // 204 No Content
             } else {
@@ -164,25 +160,29 @@ public class FilesController {
     }
 
     @GetMapping("/download/{id}")
-    public ResponseEntity<Resource> downloadFileById(@PathVariable Long id) {
+    public ResponseEntity<byte[]> downloadFileById(@AuthenticationPrincipal Jwt jwt,
+                                                     @PathVariable Long id) {
         try {
-            File file = fileService.loadFile(id);
+            String sub = jwt.getSubject();
+            File file = fileService.loadFile(sub, id);
 
-            ByteArrayResource resource = new ByteArrayResource(file.getFileData());
-            long contentLength = file.getFileData().length;
+            if (file == null || file.getFileData() == null) {
+                return ResponseEntity.notFound().build();
+            }
 
-            // Encode filename to handle non-ASCII characters
-            String filename = file.getFileName() + "." + file.getFileType();
-            String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
+            System.out.println(file.getContentType());
+            System.out.println(file.getFileData().length);
+            System.out.println(file.getFileSize());
+            System.out.println(file.getFileName());
 
-            // Set Content-Disposition with encoded filename
-            String contentDisposition = "attachment; filename*=UTF-8''" + encodedFilename;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(file.getContentType()));
+            headers.setContentLength(file.getFileData().length);
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + URLEncoder.encode(file.getFileName(), StandardCharsets.UTF_8) + "\"");
 
             return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
-                    .contentType(MediaType.parseMediaType(file.getContentType()))
-                    .contentLength(contentLength)
-                    .body(resource);
+                    .headers(headers)
+                    .body(file.getFileData());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(null);
         }

@@ -2,5 +2,20 @@ server:
   port: ${APP_PORT:8080}
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: -1
+      max-request-size: -1
   profiles:
     include: db, auth, files
+
+auth0:
+  domain: "${DOMAIN}"
+  management-api-token: "${MANAGEMENT_API_TOKEN}"
+  client-id: "${CLIENT_ID}"
+  client-secret: "${CLIENT_SECRET}"
+
+#logging:
+#  level:
+#    org.springframework.security: TRACE
+#    org.springframework.web: TRACE

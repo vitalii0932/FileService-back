@@ -1,10 +1,7 @@
 package org.example.fileservice.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +11,7 @@ import java.time.LocalDateTime;
 @Table(name = "files")
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = "fileData")
 public class File {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface FileService {
-    List<Map<String, String>> getAllFiles();
-    Map<String, String> uploadFile(MultipartFile file) throws IOException;
-    File loadFile(Long id);
-    boolean renameFile(Long id, String newName);
-    boolean starFile(Long id);
-    boolean moveToTrash(Long id);
-    boolean deleteFile(Long id);
+    List<Map<String, String>> getAllFiles(String sub);
+    Map<String, String> uploadFile(String sub, MultipartFile file) throws IOException;
+    File loadFile(String sub, Long id);
+    boolean renameFile(String sub, Long id, String newName);
+    boolean starFile(String sub, Long id);
+    boolean moveToTrash(String sub, Long id);
+    boolean deleteFile(String sub, Long id);
 }

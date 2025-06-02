@@ -28,9 +28,9 @@ public class FileServiceImpl implements FileService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, String>> getAllFiles() {
-        var user = userRepository.findById(1L).orElseThrow();
-        var files = fileRepository.findAllByUserId(user.getId());
+    public List<Map<String, String>> getAllFiles(String sub) {
+        var user = userRepository.findById(sub).orElseThrow();
+        var files = fileRepository.findAllByUserSub(user.getSub());
 
         return files.stream()
                 .map(file -> Map.of(
@@ -46,9 +46,11 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Map<String, String> uploadFile(MultipartFile file) throws IOException {
+    @Transactional
+    public Map<String, String> uploadFile(String sub, MultipartFile file) throws IOException {
+        var user = userRepository.findById(sub).orElseThrow();
+
         var compressed = lz77.compress(file.getBytes());
-        var user = userRepository.findById(1L).orElseThrow();
 
         var fileName = Objects.requireNonNull(file.getOriginalFilename()).substring(0, file.getOriginalFilename().lastIndexOf('.'));
         var fileType = Objects.requireNonNull(file.getOriginalFilename()).substring(file.getOriginalFilename().lastIndexOf('.') + 1);
@@ -78,8 +80,11 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public File loadFile(Long id) {
-        var file = fileRepository.findById(id).orElseThrow();
+    @Transactional
+    public File loadFile(String sub, Long id) {
+        var user = userRepository.findById(sub).orElseThrow();
+
+        var file = fileRepository.findByIdAndUserSub(id, user.getSub()).orElseThrow();
 
         file.setFileData(lz77.decompress(file.getFileData()));
 
@@ -87,8 +92,11 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean renameFile(Long id, String newName) {
-        var file = fileRepository.findById(id).orElseThrow();
+    @Transactional
+    public boolean renameFile(String sub, Long id, String newName) {
+        var user = userRepository.findById(sub).orElseThrow();
+
+        var file = fileRepository.findByIdAndUserSub(id, user.getSub()).orElseThrow();
 
         file.setFileName(newName);
         file.setChangeDate(LocalDateTime.now());
@@ -98,8 +106,12 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean starFile(Long id) {
-        var file = fileRepository.findById(id).orElseThrow();
+    @Transactional
+    public boolean starFile(String sub, Long id) {
+        var user = userRepository.findById(sub).orElseThrow();
+
+        var file = fileRepository.findByIdAndUserSub(id, user.getSub()).orElseThrow();
+
         file.setIsStarred(!file.getIsStarred());
         fileRepository.save(file);
 
@@ -107,8 +119,12 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean moveToTrash(Long id) {
-        var file = fileRepository.findById(id).orElseThrow();
+    @Transactional
+    public boolean moveToTrash(String sub, Long id) {
+        var user = userRepository.findById(sub).orElseThrow();
+
+        var file = fileRepository.findByIdAndUserSub(id, user.getSub()).orElseThrow();
+
         file.setIsInTrash(!file.getIsInTrash());
 
         fileRepository.save(file);
@@ -118,8 +134,12 @@ public class FileServiceImpl implements FileService {
 
     @Override
     @Transactional
-    public boolean deleteFile(Long id) {
-        fileRepository.deleteById(id);
+    public boolean deleteFile(String sub, Long id) {
+        var user = userRepository.findById(sub).orElseThrow();
+
+        var file = fileRepository.findByIdAndUserSub(id, user.getSub()).orElseThrow();
+
+        fileRepository.deleteById(file.getId());
         return true;
     }
 
